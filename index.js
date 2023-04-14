@@ -6,8 +6,9 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user");
 const session = require("express-session");
-const flash = require("connect-flash");
-let socket = require("socket.io");
+const flash = require("connect-flash")
+
+//let socket = require("socket.io");
 const { isLoggedIn } = require("./middleware");
 const { isAdmin } = require("./middleware");
 const Chatroom = require("./models/chatroom");
@@ -18,8 +19,7 @@ const methodOverride = require("method-override");
 const jwt = require('jsonwebtoken');
 const cookieParser = require("cookie-parser");
 
-//static files
-app.use(express.static("views"));
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -75,6 +75,7 @@ function generateToken(user) {
   const options = { expiresIn: '20m' }; // token will expire in the amount of time given
   return jwt.sign(payload, secret, options);
 }
+
 
 // Flash?
 app.use((req, res, next) => {
@@ -250,7 +251,7 @@ app.get("/logout", (req, res) => {
 });
 
 // Allows the verified admin to enter the broadcast page and finds all broadcasts
-app.get("/ducks/api/broadcast", [verifyToken, isAdmin], async (req, res) => {
+app.get("/ducks/api/broadcast", verifyToken, async (req, res) => {
   const broadcasts = await Broadcast.find({});
   if (req.headers["accept"] == "application/json") {
     res.status(200).send(broadcasts)
@@ -273,46 +274,69 @@ app.post("/ducks/api/broadcast", [verifyToken, isAdmin], async (req, res) => {
   }
 });
 
+//static files
+app.use(express.static("views"));
+
+
+
 // Tells the terminal that everything works just fine
 const server = app.listen(3000, function () {
   console.log("listening for requests on port 3000,");
 });
 
 
+
 // This is where we tried to use sockets
 // Socket setup & pass server
-let io = socket(server);
+// let io = socket(server);
 
-io.on("connection", function (socket) {
-  console.log("made socket connection", socket.id);
-  Chat.find({}, function (err, messages) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    socket.emit("allMessages", messages);
-  });
+// io.on("connection", function (socket) {
+//   console.log("made socket connection", socket.id);
+//   Chat.find({}, function (err, messages) {
+//     if (err) {
+//       console.error(err);
+//       return;
+//     }
+//     socket.emit("allMessages", messages);
+//   });
 
-  //här tas all data från frontend och skickas till ALLA sockets
-  //servern säger när jag hör that chatmessage kör jag denna function
-  //2
-  socket.on("chat", function (data) {
-    io.sockets.emit("chat", data);
-    const chat = new Chat({
-      handle: data.handle,
-      message: data.message,
-    });
-    chat.save((err) => {
-      if (err) {
-        console.error(err);
-      }
-    });
-  });
-  //här tar vi emot typing infon och broadcastar till alla sockets förutom den som skrev
-  socket.on("typing", function (data) {
-    socket.broadcast.emit("typing", data);
+//   //här tas all data från frontend och skickas till ALLA sockets
+//   //servern säger när jag hör that chatmessage kör jag denna function
+//   //2
+//   socket.on("chat", function (data) {
+//     io.sockets.emit("chat", data);
+//     const chat = new Chat({
+//       handle: data.handle,
+//       message: data.message,
+//     });
+//     chat.save((err) => {
+//       if (err) {
+//         console.error(err);
+//       }
+//     });
+//   });
+//   //här tar vi emot typing infon och broadcastar till alla sockets förutom den som skrev
+//   socket.on("typing", function (data) {
+//     socket.broadcast.emit("typing", data);
+//   });
+// });
+
+
+// Socket connection to showchat.ejs
+const io = require('socket.io')(server);
+
+io.on('connect', (socket) => {
+  console.log('User connected');
+
+  // emit event to all connected clients when a new user connects to the server
+  io.emit('userConnected', 'A new user has connected');
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+    io.emit('userDisconnected', 'A user has disconnected');
   });
 });
+
 
 //local mongoose plug in har methoden user.register
 
@@ -320,3 +344,4 @@ io.on("connection", function (socket) {
 //isAuthenticate med från passport.
 
 //LKWsNIAMvoOC5Jeq password for db mongo
+

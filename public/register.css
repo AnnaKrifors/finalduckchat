@@ -1,8 +1,7 @@
 body{
  
-    font-family: 'Nunito';
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
-
 h2{
     font-size: 18px;
     padding: 10px 20px;
@@ -28,7 +27,7 @@ input{
     font-size: 16px;
 }
 
-button{
+button {
     background: #575ed8;
     color: #fff;
     font-size: 18px;
@@ -36,4 +35,7 @@ button{
     padding: 12px 0;
     width: 100%;
     border-radius: 0 0 2px 2px;
+}
+#login{
+    text-decoration: none;
 }
